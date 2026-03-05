@@ -2,13 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const { open } = require('sqlite');
 const sqlite3 = require('sqlite3');
-const { GoogleGenerativeAI } = require("@google/generative-ai"); // La librería que instalaste
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '50mb' })); // Aumentamos el límite para recibir imágenes
+// IMPORTANTE: Aumentamos el límite para que las fotos pasen sin problema
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Configuración de Gemini con la llave que pusiste en Render
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 let db;
@@ -31,15 +32,18 @@ let db;
     console.log("✅ DIAGNOSTICO ADAX: Cerebro Gemini Conectado");
 })();
 
-// --- NUEVA RUTA: ANALIZAR IMAGEN CON IA ---
-// Busca esta parte en tu server.js y reemplázala:
+// ESTO QUITARÁ EL "CANNOT GET /"
+app.get('/', (req, res) => {
+    res.send("🚀 Servidor de DIAGNOSTICO ADAX funcionando correctamente.");
+});
+
 app.post('/analizar-imagen', async (req, res) => {
     try {
         const { image, region, estudio } = req.body;
         
-        // Verificamos si la llave existe en el servidor
         if (!process.env.GEMINI_API_KEY) {
-            return res.status(500).json({ texto: "Error: No se encontró la API KEY en el servidor." });
+            console.error("❌ ERROR: No hay API KEY");
+            return res.status(500).json({ texto: "Error: Configuración de API incompleta." });
         }
 
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
@@ -49,32 +53,31 @@ app.post('/analizar-imagen', async (req, res) => {
         Genera un informe detallado con:
         - HALLAZGOS: (Descripción técnica profesional)
         - IMPRESIÓN DIAGNÓSTICA: (Conclusión clara)
-        Usa terminología médica precisa.`;
+        Usa terminología médica precisa y sé muy profesional.`;
 
+        // Limpiamos el base64
         const imageData = image.split(",")[1];
         
+        // CORRECCIÓN: Estructura exacta que pide Google Gemini
         const result = await model.generateContent([
+            prompt,
             {
                 inlineData: {
                     data: imageData,
                     mimeType: "image/jpeg"
                 }
-            },
-            { text: prompt },
+            }
         ]);
 
         const response = await result.response;
-        const text = response.text();
-        
-        res.json({ texto: text });
+        res.json({ texto: response.text() });
 
     } catch (error) {
-        console.error("Error detallado de Gemini:", error);
-        res.status(500).json({ texto: "La IA no pudo procesar esta imagen específica. Intente con otra toma." });
+        console.error("❌ ERROR DETALLADO:", error.message);
+        res.status(500).json({ texto: "La IA tuvo un problema técnico: " + error.message });
     }
 });
 
-// Rutas existentes mantenidas
 app.get('/cie10', (req, res) => {
     res.json([
         { codigo: "R05X", nombre: "Tos (RX Tórax)" },
@@ -83,15 +86,5 @@ app.get('/cie10', (req, res) => {
     ]);
 });
 
-app.post('/studies', async (req, res) => {
-    const { patient_name, region, hallazgos, impresion, cie10_code } = req.body;
-    const status = (hallazgos || impresion) ? 'Edited' : 'Draft';
-    const result = await db.run(
-        'INSERT INTO studies (patient_name, region, hallazgos, impresion, cie10_code, status) VALUES (?, ?, ?, ?, ?, ?)',
-        [patient_name, region, hallazgos, impresion, cie10_code, status]
-    );
-    res.status(201).json({ id: result.lastID, status });
-});
-
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Puerto: ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Puerto activo: ${PORT}`));
