@@ -51,7 +51,7 @@ app.post('/analizar-imagen', async (req, res) => {
             return res.status(500).json({ texto: "Error de configuración: Falta la llave de IA en Render." });
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({model: "gemini-pro-vision" }, { apiVersion: 'v1beta' });
 
         const prompt = `Actúa como un radiólogo experto de la empresa DIAGNOSTICO ADAX. 
         Analiza esta imagen médica de ${estudio} de la región ${region}. 
