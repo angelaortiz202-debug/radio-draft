@@ -32,33 +32,45 @@ let db;
 })();
 
 // --- NUEVA RUTA: ANALIZAR IMAGEN CON IA ---
+// Busca esta parte en tu server.js y reemplázala:
 app.post('/analizar-imagen', async (req, res) => {
     try {
         const { image, region, estudio } = req.body;
+        
+        // Verificamos si la llave existe en el servidor
+        if (!process.env.GEMINI_API_KEY) {
+            return res.status(500).json({ texto: "Error: No se encontró la API KEY en el servidor." });
+        }
+
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        // Instrucción profesional para la IA
-        const prompt = `Actúa como un radiólogo experto de DIAGNOSTICO ADAX. 
-        Analiza esta imagen de ${estudio} de la región ${region}. 
-        Proporciona un informe estructurado:
-        1. HALLAZGOS: Descripción técnica y anatómica.
-        2. IMPRESIÓN DIAGNÓSTICA: Conclusión principal.
-        Si la imagen no es clara, indícalo. Sé conciso y profesional.`;
+        const prompt = `Actúa como un radiólogo experto de la empresa DIAGNOSTICO ADAX. 
+        Analiza esta imagen médica de ${estudio} de la región ${region}. 
+        Genera un informe detallado con:
+        - HALLAZGOS: (Descripción técnica profesional)
+        - IMPRESIÓN DIAGNÓSTICA: (Conclusión clara)
+        Usa terminología médica precisa.`;
 
-        // Procesar la imagen (quitando el encabezado base64)
         const imageData = image.split(",")[1];
         
         const result = await model.generateContent([
-            prompt,
-            { inlineData: { data: imageData, mimeType: "image/jpeg" } }
+            {
+                inlineData: {
+                    data: imageData,
+                    mimeType: "image/jpeg"
+                }
+            },
+            { text: prompt },
         ]);
 
         const response = await result.response;
-        res.json({ texto: response.text() });
+        const text = response.text();
+        
+        res.json({ texto: text });
 
     } catch (error) {
-        console.error("Error con Gemini:", error);
-        res.status(500).json({ error: "La IA está descansando, intenta de nuevo." });
+        console.error("Error detallado de Gemini:", error);
+        res.status(500).json({ texto: "La IA no pudo procesar esta imagen específica. Intente con otra toma." });
     }
 });
 
