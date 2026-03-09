@@ -13,14 +13,12 @@
         .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e0e0e0; }
         h3 { color: var(--adax-blue); margin-top: 0; border-bottom: 2px solid var(--bg-grey); padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
         label { font-weight: 600; display: block; margin: 15px 0 5px; font-size: 13px; color: #555; text-transform: uppercase; }
-        select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; transition: 0.3s; }
-        select:focus, textarea:focus { border-color: var(--adax-accent); outline: none; box-shadow: 0 0 5px rgba(0,123,255,0.2); }
-        .upload-section { border: 2px dashed var(--adax-accent); background: #f0f7ff; padding: 30px; text-align: center; border-radius: 12px; cursor: pointer; transition: 0.3s; }
-        .upload-section:hover { background: #e6f0ff; border-style: solid; }
+        select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
+        .upload-section { border: 2px dashed var(--adax-accent); background: #f0f7ff; padding: 30px; text-align: center; border-radius: 12px; cursor: pointer; }
         .preview-img { width: 100%; max-height: 250px; object-fit: contain; margin-top: 15px; border-radius: 8px; border: 1px solid #ddd; }
         .btn-dictar { background: #6c757d; color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .btn-dictar.active { background: #dc3545; animation: pulse 1.5s infinite; }
-        .btn-save { background: var(--success); color: white; border: none; padding: 18px; border-radius: 10px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 25px; text-transform: uppercase; letter-spacing: 1px; }
+        .btn-save { background: var(--success); color: white; border: none; padding: 18px; border-radius: 10px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 25px; text-transform: uppercase; }
         textarea { min-height: 350px; border-left: 6px solid var(--adax-blue); line-height: 1.6; font-size: 15px; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
@@ -55,7 +53,7 @@
         <label>Adjuntar Imagen Médica</label>
         <div class="upload-section" onclick="document.getElementById('fileInput').click()">
             <i class="fas fa-cloud-upload-alt fa-3x" style="color: var(--adax-accent)"></i>
-            <p style="margin: 10px 0 0;">Click para cargar placa radiológica</p>
+            <p style="margin: 10px 0 0;">Cargar placa radiológica</p>
             <input type="file" id="fileInput" hidden accept="image/*" onchange="procesarAnalisis(this.files[0])">
         </div>
         <div id="previewContainer"></div>
@@ -69,8 +67,8 @@
             <i class="fas fa-microphone"></i> Iniciar Dictado Profesional
         </button>
 
-        <button class="btn-save" onclick="guardarInforme()">
-            <i class="fas fa-check-circle"></i> Validar y Guardar Informe
+        <button class="btn-save" onclick="alert('Informe Validado y Guardado.')">
+            <i class="fas fa-check-circle"></i> Validar y Guardar
         </button>
     </div>
 </div>
@@ -78,16 +76,15 @@
 <script>
     const dbRegiones = {
         "RX": {
-            "Cabeza/Cara": ["Cráneo", "Senos Paranasales", "Huesos Nasales", "Órbitas"],
-            "Columna": ["Cervical", "Dorsal", "Lumbar", "Sacro-Cóccix"],
-            "Torax/Abdomen": ["Tórax (P.A.)", "Abdomen Simple"],
-            "Extremidades": ["Hombro", "Codo", "Muñeca/Mano", "Cadera", "Rodilla", "Tibia y Peroné", "Tobillo/Pie"]
+            "Cabeza/Cara": ["Cráneo", "Senos Paranasales", "Huesos Nasales"],
+            "Columna": ["Cervical", "Dorsal", "Lumbar"],
+            "Extremidades": ["Hombro", "Mano", "Rodilla", "Tibia y Peroné", "Pie"]
         },
         "TC": {
-            "Cuerpo": ["Cerebro Simple", "Silla Turca", "Tórax de Alta Res.", "Abdomen y Pelvis", "Urotomografía"]
+            "Principales": ["Cerebro Simple", "Tórax", "Abdomen y Pelvis", "Urotomografía"]
         },
         "RM": { "General": ["Cerebro", "Columna Total", "Articulaciones"] },
-        "US": { "General": ["Abdomen Total", "Pélvico Transvaginal", "Obstétrico", "Tejidos Blandos"] }
+        "US": { "General": ["Abdomen Total", "Pélvico", "Obstétrico"] }
     };
 
     function actualizarRegiones() {
@@ -114,9 +111,9 @@
         const region = document.getElementById('regionSel').value;
         const estudio = document.getElementById('studyType').value;
 
-        if (!region || !estudio) { alert("⚠️ Por favor, complete la modalidad y región."); return; }
+        if (!region || !estudio) { alert("⚠️ Seleccione estudio y región."); return; }
 
-        hallazgos.value = "⏳ DIAGNOSTICO ADAX: Analizando imagen con Gemini 1.5 Flash...";
+        hallazgos.value = "⏳ DIAGNOSTICO ADAX: Analizando imagen...";
         
         const reader = new FileReader();
         reader.onload = async (e) => {
@@ -127,54 +124,20 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ image: e.target.result, region, estudio })
                 });
+
+                // Mejora sugerida: verificar si el servidor respondió bien
+                if (!res.ok) throw new Error("Error en la respuesta del servidor");
+
                 const data = await res.json();
-                hallazgos.value = data.texto || "No se pudo generar el informe.";
-            } catch (err) { hallazgos.value = "Error de conexión: " + err.message; }
+                hallazgos.value = data.texto;
+            } catch (err) { 
+                hallazgos.value = "Error de conexión: " + err.message; 
+            }
         };
         reader.readAsDataURL(file);
     }
 
-    // DICTADO PERSISTENTE PROFESIONAL
+    // Dictado Persistente
     let recognition;
     function toggleDictado() {
-        if (!('webkitSpeechRecognition' in window)) { alert("Tu navegador no soporta dictado."); return; }
-        
-        if (!recognition) {
-            recognition = new webkitSpeechRecognition();
-            recognition.lang = 'es-CO';
-            recognition.continuous = true;
-            recognition.interimResults = false;
-
-            recognition.onresult = (event) => {
-                let transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
-                
-                // Comandos de puntuación
-                transcript = transcript
-                    .replace(/punto y aparte/g, ".\n\n")
-                    .replace(/punto/g, ".")
-                    .replace(/coma/g, ",")
-                    .replace(/nuevo párrafo/g, "\n\n")
-                    .replace(/dos puntos/g, ":");
-
-                document.getElementById('hallazgos').value += " " + transcript.trim();
-            };
-        }
-
-        const btn = document.getElementById('btn-mic');
-        if (btn.classList.contains('active')) {
-            recognition.stop();
-            btn.classList.remove('active');
-            btn.innerHTML = '<i class="fas fa-microphone"></i> Iniciar Dictado Profesional';
-        } else {
-            recognition.start();
-            btn.classList.add('active');
-            btn.innerHTML = '<i class="fas fa-stop"></i> Grabando... (Diga "Punto")';
-        }
-    }
-
-    function guardarInforme() {
-        alert("✅ Informe guardado exitosamente en la base de datos de DIAGNOSTICO ADAX.");
-    }
-</script>
-</body>
-</html>
+        if
