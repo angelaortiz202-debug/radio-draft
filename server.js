@@ -16,7 +16,10 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 app.post('/analizar-imagen', async (req, res) => {
     try {
         const { image, region, estudio } = req.body;
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
+        const model = genAI.getGenerativeModel({ 
+    model: "gemini-1.5-flash",
+    apiVersion: 'v1' // Forzamos la versión 1 estable para evitar el error de la v1beta
+});
 
         const prompt = `Actúa como radiólogo de DIAGNOSTICO ADAX. 
         Analiza esta imagen médica de ${estudio} de la región ${region}. 
