@@ -7,49 +7,49 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
-// 1. Servir archivos estáticos (Interfaz y Logo)
+// 1. Archivos estáticos desde 'public'
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 2. Configuración de Google AI (Sin especificar versión aquí para evitar el bug v1beta)
+// 2. Configuración de IA (Asegúrate de tener GEMINI_API_KEY en Render)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 app.post('/analizar-imagen', async (req, res) => {
     try {
         const { image, region, estudio } = req.body;
+        
+        // Usamos la potencia de la 2.0
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-        // SELECCIÓN DEL MODELO: Usamos el nombre base que es el más compatible en Render
-        // Si gemini-1.5-flash-latest falló, este nombre estándar es el "comodín"
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const prompt = `Actúa como radiólogo experto de DIAGNOSTICO ADAX. 
+        Analiza esta imagen de ${estudio} - ${region}. 
+        Genera un informe con HALLAZGOS detallados e IMPRESIÓN DIAGNÓSTICA profesional en español.`;
 
-        const prompt = `Actúa como radiólogo experto de la empresa DIAGNOSTICO ADAX. 
-        Analiza detalladamente esta imagen médica de ${estudio} de la región ${region}. 
-        Proporciona un informe profesional con:
-        1. HALLAZGOS: (Descripción técnica).
-        2. IMPRESIÓN DIAGNÓSTICA: (Conclusión médica).
-        Escribe en español profesional y directo.`;
-
-        // Extraer la base64 pura
         const base64Data = image.split(",")[1];
 
-        const result = await model.generateContent([
-            prompt,
-            {
-                inlineData: {
-                    data: base64Data,
-                    mimeType: "image/jpeg"
+        // --- TU AJUSTE MAESTRO APLICADO AQUÍ ---
+        const result = await model.generateContent({
+            contents: [
+                {
+                    role: "user",
+                    parts: [
+                        { text: prompt },
+                        {
+                            inlineData: {
+                                mimeType: "image/jpeg",
+                                data: base64Data
+                            }
+                        }
+                    ]
                 }
-            }
-        ]);
+            ]
+        });
 
         const response = await result.response;
-        const text = response.text();
-        
-        res.json({ texto: text });
+        res.json({ texto: response.text() });
 
     } catch (error) {
-        console.error("Error detallado en el servidor:", error);
-        // Enviamos el error específico para saber qué pasó exactamente
-        res.status(500).json({ texto: "Error IA: " + error.message });
+        console.error("ERROR EN SERVIDOR ADAX:", error.message);
+        res.status(500).json({ texto: "Error técnico: " + error.message });
     }
 });
 
@@ -58,8 +58,8 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// 4. Inicio del Servidor
-const PORT = process.env.PORT || 3000;
+// 4. Puerto dinámico
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Servidor DIAGNOSTICO ADAX activo en puerto ${PORT}`);
+    console.log(`🚀 DIAGNOSTICO ADAX con Gemini 2.0 activo en puerto ${PORT}`);
 });
