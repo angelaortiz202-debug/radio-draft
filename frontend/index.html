@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DIAGNOSTICO ADAX - Inteligencia Radiológica</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --adax-blue: #1A3C5E; --adax-accent: #007BFF; --bg-grey: #F4F7F9; --border: #E0E0E0; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-grey); margin: 0; color: #333; }
+        .header { background: var(--adax-blue); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .logo-area { display: flex; align-items: center; gap: 15px; }
+        .logo-img { height: 50px; background: white; border-radius: 4px; padding: 5px; }
+        .container { max-width: 1200px; margin: 20px auto; display: grid; grid-template-columns: 350px 1fr; gap: 20px; padding: 0 20px; }
+        .card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        h3 { color: var(--adax-blue); margin-top: 0; border-bottom: 2px solid var(--bg-grey); padding-bottom: 10px; font-size: 18px; }
+        label { font-weight: 600; display: block; margin: 15px 0 5px; font-size: 13px; color: #555; }
+        select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        .upload-section { border: 2px dashed var(--adax-accent); background: #f0f7ff; padding: 20px; text-align: center; border-radius: 10px; cursor: pointer; }
+        .preview-img { width: 100%; max-height: 200px; object-fit: contain; margin-top: 15px; border-radius: 8px; }
+        .btn-save { background: #28a745; color: white; border: none; padding: 15px; border-radius: 8px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; }
+        textarea { min-height: 300px; border-left: 5px solid var(--adax-blue); }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo-area">
+        <img src="logo.png" alt="ADAX" class="logo-img" onerror="this.src='https://via.placeholder.com/150?text=ADAX'">
+        <div>
+            <h1 style="margin:0; font-size: 18px; letter-spacing: 1px;">DIAGNOSTICO ADAX</h1>
+            <span style="font-size: 11px; text-transform: uppercase; opacity: 0.8;">Hito 3: IA de Visión Médica</span>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="card">
+        <h3><i class="fas fa-microscope"></i> Configuración</h3>
+        <label>TIPO DE ESTUDIO</label>
+        <select id="studyType">
+            <option value="">-- Seleccione --</option>
+            <option value="RX">Rayos X (RX)</option>
+            <option value="TC">Tomografía (TC)</option>
+        </select>
+
+        <label>REGIÓN ANATÓMICA</label>
+        <select id="templateSel">
+            <option value="">-- Elija Modalidad primero --</option>
+        </select>
+
+        <label>ADJUNTAR IMAGEN</label>
+        <div class="upload-section" onclick="document.getElementById('fileInput').click()">
+            <i class="fas fa-images fa-2x" style="color: var(--adax-accent)"></i>
+            <p style="margin: 10px 0 0; font-size: 12px;">Cargar Placa</p>
+            <input type="file" id="fileInput" hidden accept="image/*" onchange="handleFiles(this.files)">
+        </div>
+        <div id="previewArea"></div>
+    </div>
+
+    <div class="card">
+        <h3><i class="fas fa-file-medical"></i> Informe de IA</h3>
+        <textarea id="hallazgos" placeholder="El informe aparecerá aquí..."></textarea>
+        <button class="btn-save" onclick="alert('Informe Guardado')">VALIDAR Y GUARDAR</button>
+    </div>
+</div>
+
+<script>
+    const API_URL = "https://radio-draft.onrender.com";
+
+    const dbPlantillas = {
+        "RX": {
+            "Cabeza": ["Cráneo", "Senos Paranasales"],
+            "Columna": ["Cervical", "Dorsal", "Lumbar"],
+            "Extremidades": ["Hombro", "Mano", "Rodilla", "Tibia y Peroné", "Pie"]
+        },
+        "TC": {
+            "Cuerpo": ["Cerebro", "Tórax", "Abdomen", "Pelvis"]
+        }
+    };
+
+    // LOGICA DE LISTAS DESPLEGABLES
+    document.getElementById('studyType').addEventListener('change', function() {
+        const tipo = this.value;
+        const sel = document.getElementById('templateSel');
+        sel.innerHTML = '<option value="">-- Seleccione Región --</option>';
+        
+        if (tipo && dbPlantillas[tipo]) {
+            for (const grupo in dbPlantillas[tipo]) {
+                const optgroup = document.createElement('optgroup');
+                optgroup.label = grupo;
+                dbPlantillas[tipo][grupo].forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item; opt.textContent = item;
+                    optgroup.appendChild(opt);
+                });
+                sel.appendChild(optgroup);
+            }
+        }
+    });
+
+    async function handleFiles(files) {
+        const hallazgosArea = document.getElementById('hallazgos');
+        const study = document.getElementById('studyType').value;
+        const region = document.getElementById('templateSel').value;
+
+        if (!study || !region) {
+            alert("⚠️ Seleccione Estudio y Región primero.");
+            return;
+        }
+
+        hallazgosArea.value = "⏳ DIAGNOSTICO ADAX analizando... por favor espere.";
+        
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            document.getElementById('previewArea').innerHTML = `<img src="${e.target.result}" class="preview-img">`;
+            
+            try {
+                const response = await fetch(`${API_URL}/analizar-imagen`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: e.target.result, region: region, estudio: study })
+                });
+                const data = await response.json();
+                hallazgosArea.value = data.texto || "No se recibió informe.";
+            } catch (err) {
+                hallazgosArea.value = "Error de conexión: " + err.message;
+            }
+        };
+        reader.readAsDataURL(files[0]);
+    }
+</script>
+</body>
+</html>
