@@ -67,13 +67,12 @@
 
 <script>
     const dbRegiones = {
-        "RX": { "Huesos": ["Cráneo", "Senos P.", "Huesos Nasales"], "Columna": ["Cervical", "Dorsal", "Lumbar"], "Extremidades": ["Mano", "Rodilla", "Tibia y Peroné", "Pie"] },
-        "TC": { "Principales": ["Cerebro Simple", "Tórax", "Abdomen y Pelvis", "Urotomografía"] },
-        "RM": { "General": ["Cerebro", "Columna Total", "Articulaciones"] },
-        "US": { "General": ["Abdomen Total", "Pélvico", "Obstétrico"] }
+        "RX": { "Huesos": ["Cráneo", "Huesos Nasales"], "Columna": ["Cervical", "Dorsal", "Lumbar"], "Extremidades": ["Mano", "Rodilla", "Tibia y Peroné", "Pie"] },
+        "TC": { "Cuerpo": ["Cerebro Simple", "Tórax", "Abdomen y Pelvis"] },
+        "RM": { "General": ["Cerebro RM", "Columna Total"] },
+        "US": { "General": ["Abdomen Total", "Pélvico"] }
     };
 
-    // SOLUCIÓN ROBUSTA: Carga de eventos tras cargar el DOM
     document.addEventListener("DOMContentLoaded", function () {
         const studySelect = document.getElementById("studyType");
         const regionSelect = document.getElementById("regionSel");
@@ -82,13 +81,10 @@
         const btnMic = document.getElementById("btn-mic");
         const hallazgos = document.getElementById("hallazgos");
 
-        // 1. Motor de Regiones (Tu versión optimizada)
-        function actualizarRegiones() {
-            const tipo = studySelect.value;
-            regionSelect.innerHTML = "";
-
-            const defaultOpt = new Option("-- Seleccione Región --", "");
-            regionSelect.add(defaultOpt);
+        // 1. Motor de Regiones (Corregido con appendChild)
+        studySelect.addEventListener("change", function() {
+            const tipo = this.value;
+            regionSelect.innerHTML = '<option value="">-- Seleccione Región --</option>';
 
             if (!dbRegiones[tipo]) return;
 
@@ -96,15 +92,16 @@
                 const optgroup = document.createElement("optgroup");
                 optgroup.label = grupo;
                 dbRegiones[tipo][grupo].forEach(region => {
-                    optgroup.add(new Option(region, region));
+                    const opt = document.createElement("option");
+                    opt.value = region;
+                    opt.textContent = region;
+                    optgroup.appendChild(opt); // Correcto para optgroup
                 });
-                regionSelect.add(optgroup);
+                regionSelect.appendChild(optgroup);
             });
-        }
+        });
 
-        studySelect.addEventListener("change", actualizarRegiones);
-
-        // 2. Carga de Imagen y Preview
+        // 2. Carga de Imagen
         dropArea.addEventListener("click", () => fileInput.click());
 
         fileInput.addEventListener("change", function() {
@@ -116,7 +113,7 @@
                 this.value = ""; return;
             }
 
-            hallazgos.value = "⏳ Analizando placa con Gemini IA...";
+            hallazgos.value = "⏳ Analizando placa...";
             const reader = new FileReader();
             reader.onload = async (e) => {
                 document.getElementById("previewContainer").innerHTML = `<img src="${e.target.result}" class="preview-img">`;
@@ -138,33 +135,25 @@
             reader.readAsDataURL(file);
         });
 
-        // 3. Dictado Profesional Completo
+        // 3. Dictado
         let recognition;
         btnMic.addEventListener("click", function() {
             if (!('webkitSpeechRecognition' in window)) { alert("Navegador no soporta dictado"); return; }
-            
             if (!recognition) {
                 recognition = new webkitSpeechRecognition();
                 recognition.lang = "es-CO";
                 recognition.continuous = true;
                 recognition.onresult = (e) => {
                     let transcript = e.results[e.results.length - 1][0].transcript.toLowerCase();
-                    transcript = transcript
-                        .replace(/punto y aparte/g, ".\n\n")
-                        .replace(/punto/g, ".")
-                        .replace(/coma/g, ",")
-                        .replace(/dos puntos/g, ":");
+                    transcript = transcript.replace(/punto/g, ".").replace(/coma/g, ",");
                     hallazgos.value += " " + transcript.trim();
                 };
             }
-
             if (this.classList.contains("active")) {
-                recognition.stop();
-                this.classList.remove("active");
-                this.innerHTML = '<i class="fas fa-microphone"></i> Iniciar Dictado Profesional';
+                recognition.stop(); this.classList.remove("active");
+                this.innerHTML = '<i class="fas fa-microphone"></i> Iniciar Dictado';
             } else {
-                recognition.start();
-                this.classList.add("active");
+                recognition.start(); this.classList.add("active");
                 this.innerHTML = '<i class="fas fa-stop"></i> Grabando...';
             }
         });
