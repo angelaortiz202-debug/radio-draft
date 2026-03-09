@@ -16,7 +16,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 app.post('/analizar-imagen', async (req, res) => {
     try {
         const { image, region, estudio } = req.body;
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
 
         const prompt = `Actúa como radiólogo de DIAGNOSTICO ADAX. 
         Analiza esta imagen médica de ${estudio} de la región ${region}. 
@@ -40,4 +40,6 @@ app.get('*', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 ADAX activo en puerto ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Servidor ADAX corriendo en puerto ${PORT}`);
+});
