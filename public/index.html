@@ -3,88 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DIAGNOSTICO ADAX - IA Radiológica</title>
+    <title>DIAGNOSTICO ADAX - Plataforma Radiológica</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --adax-blue: #1A3C5E; --adax-accent: #007BFF; --bg-grey: #F4F7F9; --success: #28a745; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-grey); margin: 0; color: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-grey); margin: 0; }
         .header { background: var(--adax-blue); color: white; padding: 15px 30px; display: flex; align-items: center; gap: 20px; border-bottom: 4px solid var(--adax-accent); }
         .container { max-width: 1300px; margin: 20px auto; display: grid; grid-template-columns: 380px 1fr; gap: 25px; padding: 0 20px; }
         .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e0e0e0; }
-        h3 { color: var(--adax-blue); margin-top: 0; border-bottom: 2px solid var(--bg-grey); padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
-        label { font-weight: 600; display: block; margin: 15px 0 5px; font-size: 13px; color: #555; text-transform: uppercase; }
+        label { font-weight: 600; display: block; margin: 15px 0 5px; font-size: 13px; color: #555; }
         select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
         .upload-section { border: 2px dashed var(--adax-accent); background: #f0f7ff; padding: 30px; text-align: center; border-radius: 12px; cursor: pointer; }
         .preview-img { width: 100%; max-height: 250px; object-fit: contain; margin-top: 15px; border-radius: 8px; border: 1px solid #ddd; }
         .btn-dictar { background: #6c757d; color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .btn-dictar.active { background: #dc3545; animation: pulse 1.5s infinite; }
-        .btn-save { background: var(--success); color: white; border: none; padding: 18px; border-radius: 10px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 25px; text-transform: uppercase; }
-        textarea { min-height: 350px; border-left: 6px solid var(--adax-blue); line-height: 1.6; font-size: 15px; }
+        .btn-save { background: var(--success); color: white; border: none; padding: 18px; border-radius: 10px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 25px; }
+        textarea { min-height: 380px; border-left: 6px solid var(--adax-blue); line-height: 1.6; font-size: 15px; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <img src="logo.png" height="60" alt="ADAX LOGO" onerror="this.src='https://via.placeholder.com/60?text=ADAX'">
-    <div>
-        <h1 style="margin:0; font-size: 22px;">DIAGNOSTICO ADAX</h1>
-        <small style="opacity: 0.8;">HITO 3: INTELIGENCIA ARTIFICIAL APLICADA</small>
-    </div>
+    <img src="logo.png" height="60" alt="ADAX" onerror="this.src='https://via.placeholder.com/60?text=ADAX'">
+    <h1>DIAGNOSTICO ADAX</h1>
 </div>
 
 <div class="container">
     <div class="card">
-        <h3><i class="fas fa-sliders-h"></i> Configuración</h3>
-        <label>Tipo de Estudio</label>
+        <h3><i class="fas fa-cog"></i> Configuración</h3>
+        <label>TIPO DE ESTUDIO</label>
         <select id="studyType" onchange="actualizarRegiones()">
-            <option value="">-- Seleccione Modalidad --</option>
+            <option value="">-- Seleccione --</option>
             <option value="RX">Rayos X (RX)</option>
             <option value="TC">Tomografía (TC)</option>
             <option value="RM">Resonancia (RM)</option>
             <option value="US">Ecografía (US)</option>
         </select>
 
-        <label>Región Anatómica</label>
+        <label>REGIÓN ANATÓMICA</label>
         <select id="regionSel">
-            <option value="">-- Elija Modalidad primero --</option>
+            <option value="">-- Elija Modalidad --</option>
         </select>
 
-        <label>Adjuntar Imagen Médica</label>
+        <label>CARGAR IMAGEN</label>
         <div class="upload-section" onclick="document.getElementById('fileInput').click()">
-            <i class="fas fa-cloud-upload-alt fa-3x" style="color: var(--adax-accent)"></i>
-            <p style="margin: 10px 0 0;">Cargar placa radiológica</p>
+            <i class="fas fa-upload fa-2x" style="color: var(--adax-accent)"></i>
+            <p>Click para subir placa</p>
             <input type="file" id="fileInput" hidden accept="image/*" onchange="procesarAnalisis(this.files[0])">
         </div>
         <div id="previewContainer"></div>
     </div>
 
     <div class="card">
-        <h3><i class="fas fa-clipboard-check"></i> Informe Radiológico</h3>
-        <textarea id="hallazgos" placeholder="El análisis de la IA aparecerá aquí..."></textarea>
-        
+        <h3><i class="fas fa-file-alt"></i> Informe IA</h3>
+        <textarea id="hallazgos" placeholder="El análisis aparecerá aquí..."></textarea>
         <button id="btn-mic" class="btn-dictar" onclick="toggleDictado()">
             <i class="fas fa-microphone"></i> Iniciar Dictado Profesional
         </button>
-
-        <button class="btn-save" onclick="alert('Informe Validado y Guardado.')">
-            <i class="fas fa-check-circle"></i> Validar y Guardar
-        </button>
+        <button class="btn-save" onclick="alert('Informe Guardado')">GUARDAR ESTUDIO</button>
     </div>
 </div>
 
 <script>
     const dbRegiones = {
-        "RX": {
-            "Cabeza/Cara": ["Cráneo", "Senos Paranasales", "Huesos Nasales"],
-            "Columna": ["Cervical", "Dorsal", "Lumbar"],
-            "Extremidades": ["Hombro", "Mano", "Rodilla", "Tibia y Peroné", "Pie"]
-        },
-        "TC": {
-            "Principales": ["Cerebro Simple", "Tórax", "Abdomen y Pelvis", "Urotomografía"]
-        },
-        "RM": { "General": ["Cerebro", "Columna Total", "Articulaciones"] },
-        "US": { "General": ["Abdomen Total", "Pélvico", "Obstétrico"] }
+        "RX": { "Huesos": ["Cráneo", "Huesos Nasales"], "Columna": ["Cervical", "Lumbar"], "Extremidades": ["Mano", "Rodilla", "Tibia y Peroné", "Pie"] },
+        "TC": { "Cuerpo": ["Cerebro", "Tórax", "Abdomen y Pelvis"] },
+        "RM": { "General": ["Cerebro", "Columna"] },
+        "US": { "General": ["Abdomen Total", "Pélvico"] }
     };
 
     function actualizarRegiones() {
@@ -93,14 +79,11 @@
         sel.innerHTML = '<option value="">-- Seleccione Región --</option>';
         if (dbRegiones[tipo]) {
             for (let grupo in dbRegiones[tipo]) {
-                let optgroup = document.createElement('optgroup');
-                optgroup.label = grupo;
+                let opt = document.createElement('optgroup'); opt.label = grupo;
                 dbRegiones[tipo][grupo].forEach(r => {
-                    let opt = document.createElement('option');
-                    opt.value = r; opt.textContent = r;
-                    optgroup.appendChild(opt);
+                    let o = document.createElement('option'); o.value = r; o.textContent = r; opt.appendChild(o);
                 });
-                sel.appendChild(optgroup);
+                sel.appendChild(opt);
             }
         }
     }
@@ -111,10 +94,9 @@
         const region = document.getElementById('regionSel').value;
         const estudio = document.getElementById('studyType').value;
 
-        if (!region || !estudio) { alert("⚠️ Seleccione estudio y región."); return; }
+        if (!region || !estudio) { alert("⚠️ Falta región o estudio"); return; }
 
-        hallazgos.value = "⏳ DIAGNOSTICO ADAX: Analizando imagen...";
-        
+        hallazgos.value = "⏳ Analizando con IA...";
         const reader = new FileReader();
         reader.onload = async (e) => {
             document.getElementById('previewContainer').innerHTML = `<img src="${e.target.result}" class="preview-img">`;
@@ -124,20 +106,36 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ image: e.target.result, region, estudio })
                 });
-
-                // Mejora sugerida: verificar si el servidor respondió bien
-                if (!res.ok) throw new Error("Error en la respuesta del servidor");
-
+                if (!res.ok) throw new Error("Servidor no responde");
                 const data = await res.json();
                 hallazgos.value = data.texto;
-            } catch (err) { 
-                hallazgos.value = "Error de conexión: " + err.message; 
-            }
+            } catch (err) { hallazgos.value = "Error: " + err.message; }
         };
         reader.readAsDataURL(file);
     }
 
-    // Dictado Persistente
     let recognition;
     function toggleDictado() {
-        if
+        if (!('webkitSpeechRecognition' in window)) { alert("Navegador no compatible"); return; }
+        if (!recognition) {
+            recognition = new webkitSpeechRecognition();
+            recognition.lang = "es-CO";
+            recognition.continuous = true;
+            recognition.onresult = (e) => {
+                let transcript = e.results[e.results.length - 1][0].transcript.toLowerCase();
+                transcript = transcript.replace(/punto y aparte/g, ".\n\n").replace(/punto/g, ".").replace(/coma/g, ",").replace(/dos puntos/g, ":");
+                document.getElementById("hallazgos").value += " " + transcript.trim();
+            };
+        }
+        const btn = document.getElementById("btn-mic");
+        if (btn.classList.contains("active")) {
+            recognition.stop(); btn.classList.remove("active");
+            btn.innerHTML = '<i class="fas fa-microphone"></i> Iniciar Dictado Profesional';
+        } else {
+            recognition.start(); btn.classList.add("active");
+            btn.innerHTML = '<i class="fas fa-stop"></i> Grabando...';
+        }
+    }
+</script>
+</body>
+</html>
