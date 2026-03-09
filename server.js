@@ -31,7 +31,7 @@ app.post('/analizar-imagen', async (req, res) => {
             return res.status(500).json({ texto: "Error: No se encontró la API KEY en Render." });
         }
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
 
         const prompt = `Actúa como un radiólogo experto de la empresa DIAGNOSTICO ADAX. 
         Analiza esta imagen médica de ${estudio} de la región ${region}. 
