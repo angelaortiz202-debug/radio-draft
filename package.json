@@ -1,7 +1,6 @@
 {
-  "name": "mvp-radiologia",
+  "name": "radio-draft",
   "version": "1.0.0",
-  "description": "Herramienta para radiólogos DIAGNOSTICO ADAX",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
