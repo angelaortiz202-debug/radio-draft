@@ -25,7 +25,7 @@ app.post('/analizar-imagen', async (req, res) => {
         const { image, region, estudio } = req.body;
         
         // Forzamos el modelo 2.0 Flash
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `Actúa como radiólogo de DIAGNOSTICO ADAX. Analiza la imagen de ${estudio} - ${region}. Hallazgos e impresión diagnóstica.`;
 
