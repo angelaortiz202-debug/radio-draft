@@ -54,3 +54,4 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 ADAX con Gemini 2.0 activo en puerto ${PORT}`);
 });
+// Update final 10-03-2026
