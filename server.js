@@ -24,20 +24,22 @@ app.post('/analizar-imagen', async (req, res) => {
     try {
         const { image, region, estudio } = req.body;
         
-        // Forzamos el modelo 2.0 Flash
-        const model = genAI.getGenerativeModel({ 
-    model: "gemini-1.5-flash",
-    apiVersion: "v1" // <--- ESTO ES LO QUE QUITA EL ERROR 404
-});
+        // LA MEJOR DECISIÓN: Gemini 2.0 Flash (Rápido, moderno y con visión superior)
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-        const prompt = `Actúa como radiólogo de DIAGNOSTICO ADAX. Analiza la imagen de ${estudio} - ${region}. Hallazgos e impresión diagnóstica.`;
+        const prompt = `Actúa como radiólogo experto de DIAGNOSTICO ADAX. 
+        Analiza detalladamente esta imagen de ${estudio} de la región ${region}. 
+        Genera un informe con HALLAZGOS e IMPRESIÓN DIAGNÓSTICA en español profesional.`;
 
+        const base64Data = image.split(",")[1];
+
+        // Estructura de "Contents" recomendada para el modelo 2.0
         const result = await model.generateContent({
             contents: [{
                 role: "user",
                 parts: [
                     { text: prompt },
-                    { inlineData: { mimeType: "image/jpeg", data: image.split(",")[1] } }
+                    { inlineData: { mimeType: "image/jpeg", data: base64Data } }
                 ]
             }]
         });
@@ -46,8 +48,8 @@ app.post('/analizar-imagen', async (req, res) => {
         res.json({ texto: response.text() });
 
     } catch (error) {
-        console.error("❌ ERROR REAL IA:", error); // Esto nos dirá el error real en los logs
-        res.status(500).json({ texto: "Error en servidor ADAX: " + error.message });
+        console.error("❌ ERROR REAL EN SERVIDOR ADAX:", error.message);
+        res.status(500).json({ texto: "Error en servidor: " + error.message });
     }
 });
 
