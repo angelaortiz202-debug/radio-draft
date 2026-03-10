@@ -25,7 +25,10 @@ app.post('/analizar-imagen', async (req, res) => {
         const { image, region, estudio } = req.body;
         
         // Forzamos el modelo 2.0 Flash
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ 
+    model: "gemini-1.5-flash",
+    apiVersion: "v1" // <--- ESTO ES LO QUE QUITA EL ERROR 404
+});
 
         const prompt = `Actúa como radiólogo de DIAGNOSTICO ADAX. Analiza la imagen de ${estudio} - ${region}. Hallazgos e impresión diagnóstica.`;
 
