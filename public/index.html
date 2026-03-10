@@ -2,162 +2,93 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DIAGNOSTICO ADAX - Plataforma Radiológica</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>DIAGNOSTICO ADAX - IA Radiológica</title>
     <style>
-        :root { --adax-blue: #1A3C5E; --adax-accent: #007BFF; --bg-grey: #F4F7F9; --success: #28a745; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg-grey); margin: 0; }
-        .header { background: var(--adax-blue); color: white; padding: 15px 30px; display: flex; align-items: center; gap: 20px; border-bottom: 4px solid var(--adax-accent); }
-        .container { max-width: 1300px; margin: 20px auto; display: grid; grid-template-columns: 380px 1fr; gap: 25px; padding: 0 20px; }
-        .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid #e0e0e0; }
-        label { font-weight: 600; display: block; margin: 15px 0 5px; font-size: 13px; color: #555; }
-        select, textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; }
-        .upload-section { border: 2px dashed var(--adax-accent); background: #f0f7ff; padding: 30px; text-align: center; border-radius: 12px; cursor: pointer; }
-        .preview-img { width: 100%; max-height: 250px; object-fit: contain; margin-top: 15px; border-radius: 8px; border: 1px solid #ddd; }
-        .btn-dictar { background: #6c757d; color: white; border: none; padding: 14px; border-radius: 8px; cursor: pointer; width: 100%; margin-top: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; }
-        .btn-dictar.active { background: #dc3545; animation: pulse 1.5s infinite; }
-        .btn-save { background: var(--success); color: white; border: none; padding: 18px; border-radius: 10px; width: 100%; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 25px; }
-        textarea { min-height: 400px; border-left: 6px solid var(--adax-blue); line-height: 1.6; font-size: 15px; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f7f6; color: #333; }
+        .container { max-width: 800px; margin: 20px auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border-top: 5px solid #0056b3; }
+        h1 { color: #0056b3; text-align: center; }
+        .controls { display: grid; gap: 15px; margin-bottom: 20px; }
+        select, input, button { padding: 12px; border-radius: 5px; border: 1px solid #ccc; font-size: 16px; }
+        button { background: #0056b3; color: white; border: none; cursor: pointer; font-weight: bold; }
+        button:hover { background: #004494; }
+        #resultado { white-space: pre-wrap; background: #e9ecef; padding: 20px; border-radius: 5px; min-height: 100px; border-left: 5px solid #0056b3; }
     </style>
 </head>
 <body>
-
-<div class="header">
-    <img src="logo.png" height="60" alt="ADAX" onerror="this.src='https://via.placeholder.com/60?text=ADAX'">
-    <h1>DIAGNOSTICO ADAX</h1>
-</div>
-
-<div class="container">
-    <div class="card">
-        <h3><i class="fas fa-cog"></i> Configuración</h3>
-        <label>TIPO DE ESTUDIO</label>
-        <select id="studyType">
-            <option value="">-- Seleccione --</option>
-            <option value="RX">Rayos X (RX)</option>
-            <option value="TC">Tomografía (TC)</option>
-            <option value="RM">Resonancia (RM)</option>
-            <option value="US">Ecografía (US)</option>
-        </select>
-
-        <label>REGIÓN ANATÓMICA</label>
-        <select id="regionSel">
-            <option value="">-- Elija Modalidad primero --</option>
-        </select>
-
-        <label>CARGAR IMAGEN</label>
-        <div class="upload-section" id="dropArea">
-            <i class="fas fa-upload fa-2x" style="color: var(--adax-accent)"></i>
-            <p>Click para subir placa</p>
-            <input type="file" id="fileInput" hidden accept="image/*">
+    <div class="container">
+        <h1>DIAGNOSTICO ADAX</h1>
+        <div class="controls">
+            <input type="file" id="imageInput" accept="image/*">
+            <select id="tipoEstudio">
+                <option value="RX">Radiografía (RX)</option>
+                <option value="TC">Tomografía (TC)</option>
+                <option value="RM">Resonancia (RM)</option>
+            </select>
+            <input type="text" id="region" placeholder="Región (Ej: Tórax, Mano, Cráneo)">
+            <button onclick="procesar()">Generar Informe con IA</button>
         </div>
-        <div id="previewContainer"></div>
+        <div id="resultado">El informe aparecerá aquí...</div>
     </div>
 
-    <div class="card">
-        <h3><i class="fas fa-file-alt"></i> Informe IA</h3>
-        <textarea id="hallazgos" placeholder="El análisis aparecerá aquí..."></textarea>
-        <button id="btn-mic" class="btn-dictar">
-            <i class="fas fa-microphone"></i> Iniciar Dictado Profesional
-        </button>
-        <button class="btn-save" onclick="alert('Estudio Guardado Correctamente')">GUARDAR ESTUDIO</button>
-    </div>
-</div>
+    <script>
+        // LA FUNCIÓN DE OPTIMIZACIÓN MAESTRA
+        function optimizarImagen(base64Str) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.src = base64Str;
+                img.onload = () => {
+                    const MAX_SIZE = 1024;
+                    let width = img.width;
+                    let height = img.height;
 
-<script>
-    const dbRegiones = {
-        "RX": { "Huesos": ["Cráneo", "Huesos Nasales"], "Columna": ["Cervical", "Dorsal", "Lumbar"], "Extremidades": ["Mano", "Rodilla", "Tibia y Peroné", "Pie"] },
-        "TC": { "Cuerpo": ["Cerebro Simple", "Tórax", "Abdomen y Pelvis"] },
-        "RM": { "General": ["Cerebro RM", "Columna Total"] },
-        "US": { "General": ["Abdomen Total", "Pélvico"] }
-    };
+                    if (width > height) {
+                        if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                    } else {
+                        if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                    }
 
-    document.addEventListener("DOMContentLoaded", function () {
-        const studySelect = document.getElementById("studyType");
-        const regionSelect = document.getElementById("regionSel");
-        const fileInput = document.getElementById("fileInput");
-        const dropArea = document.getElementById("dropArea");
-        const btnMic = document.getElementById("btn-mic");
-        const hallazgos = document.getElementById("hallazgos");
-
-        // 1. Motor de Regiones (Corregido con appendChild)
-        studySelect.addEventListener("change", function() {
-            const tipo = this.value;
-            regionSelect.innerHTML = '<option value="">-- Seleccione Región --</option>';
-
-            if (!dbRegiones[tipo]) return;
-
-            Object.keys(dbRegiones[tipo]).forEach(grupo => {
-                const optgroup = document.createElement("optgroup");
-                optgroup.label = grupo;
-                dbRegiones[tipo][grupo].forEach(region => {
-                    const opt = document.createElement("option");
-                    opt.value = region;
-                    opt.textContent = region;
-                    optgroup.appendChild(opt); // Correcto para optgroup
-                });
-                regionSelect.appendChild(optgroup);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    const result = canvas.toDataURL('image/jpeg', 0.7);
+                    canvas.width = 0; canvas.height = 0; // Liberar memoria
+                    resolve(result);
+                };
+                img.onerror = () => reject("Error al cargar la imagen");
             });
-        });
+        }
 
-        // 2. Carga de Imagen
-        dropArea.addEventListener("click", () => fileInput.click());
+        async function procesar() {
+            const file = document.getElementById('imageInput').files[0];
+            const estudio = document.getElementById('tipoEstudio').value;
+            const region = document.getElementById('region').value;
+            const resDiv = document.getElementById('resultado');
 
-        fileInput.addEventListener("change", function() {
-            const file = this.files[0];
-            if (!file) return;
+            if (!file) return alert("Por favor sube una imagen");
+            resDiv.innerText = "Optimizando imagen y analizando con ADAX IA...";
 
-            if (!studySelect.value || !regionSelect.value) {
-                alert("⚠️ Seleccione estudio y región primero");
-                this.value = ""; return;
-            }
-
-            hallazgos.value = "⏳ Analizando placa...";
             const reader = new FileReader();
             reader.onload = async (e) => {
-                document.getElementById("previewContainer").innerHTML = `<img src="${e.target.result}" class="preview-img">`;
                 try {
-                    const res = await fetch('/analizar-imagen', {
+                    const imagenOptimizada = await optimizarImagen(e.target.result);
+                    
+                    const response = await fetch('/analizar-imagen', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                            image: e.target.result, 
-                            region: regionSelect.value, 
-                            estudio: studySelect.value 
-                        })
+                        body: JSON.stringify({ image: imagenOptimizada, region, estudio })
                     });
-                    if (!res.ok) throw new Error("Error en servidor");
-                    const data = await res.json();
-                    hallazgos.value = data.texto;
-                } catch (err) { hallazgos.value = "Error: " + err.message; }
+
+                    const data = await response.json();
+                    resDiv.innerText = data.texto;
+                } catch (err) {
+                    resDiv.innerText = "Error: " + err;
+                }
             };
             reader.readAsDataURL(file);
-        });
-
-        // 3. Dictado
-        let recognition;
-        btnMic.addEventListener("click", function() {
-            if (!('webkitSpeechRecognition' in window)) { alert("Navegador no soporta dictado"); return; }
-            if (!recognition) {
-                recognition = new webkitSpeechRecognition();
-                recognition.lang = "es-CO";
-                recognition.continuous = true;
-                recognition.onresult = (e) => {
-                    let transcript = e.results[e.results.length - 1][0].transcript.toLowerCase();
-                    transcript = transcript.replace(/punto/g, ".").replace(/coma/g, ",");
-                    hallazgos.value += " " + transcript.trim();
-                };
-            }
-            if (this.classList.contains("active")) {
-                recognition.stop(); this.classList.remove("active");
-                this.innerHTML = '<i class="fas fa-microphone"></i> Iniciar Dictado';
-            } else {
-                recognition.start(); this.classList.add("active");
-                this.innerHTML = '<i class="fas fa-stop"></i> Grabando...';
-            }
-        });
-    });
-</script>
+        }
+    </script>
 </body>
 </html>

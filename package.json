@@ -1,12 +1,12 @@
 {
-  "name": "radio-draft",
+  "name": "adax-mvp",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.24.1",
+    "@google/generative-ai": "^0.21.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.18.2"

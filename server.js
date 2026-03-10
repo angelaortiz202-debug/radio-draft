@@ -1,4 +1,4 @@
-require('dotenv').config(); // IMPORTANTE: Carga la API Key del archivo .env
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -6,14 +6,11 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
 app.use(cors());
-app.use(express.json({ limit: '50mb' }));
+app.use(express.json({ limit: '50mb' })); // Para aceptar imágenes base64
 
-// Verificación de Seguridad en Logs de Render
-console.log("🔍 Verificando API KEY...");
+// Verificación de API KEY en los Logs de Render
 if (!process.env.GEMINI_API_KEY) {
-    console.error("❌ ERROR: La GEMINI_API_KEY no está configurada en Render o .env");
-} else {
-    console.log("✅ API KEY detectada correctamente.");
+    console.error("❌ ERROR: Falta GEMINI_API_KEY en las variables de entorno.");
 }
 
 app.use(express.static(path.join(__dirname, 'public')));
@@ -24,22 +21,20 @@ app.post('/analizar-imagen', async (req, res) => {
     try {
         const { image, region, estudio } = req.body;
         
-        // LA MEJOR DECISIÓN: Gemini 2.0 Flash (Rápido, moderno y con visión superior)
+        // Usamos el modelo más moderno y con mejor visión
         const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         const prompt = `Actúa como radiólogo experto de DIAGNOSTICO ADAX. 
-        Analiza detalladamente esta imagen de ${estudio} de la región ${region}. 
-        Genera un informe con HALLAZGOS e IMPRESIÓN DIAGNÓSTICA en español profesional.`;
+        Analiza la imagen de ${estudio} de ${region}. 
+        Proporciona un informe estructurado con: Hallazgos e Impresión Diagnóstica. 
+        Usa lenguaje médico profesional en español.`;
 
-        const base64Data = image.split(",")[1];
-
-        // Estructura de "Contents" recomendada para el modelo 2.0
         const result = await model.generateContent({
             contents: [{
                 role: "user",
                 parts: [
                     { text: prompt },
-                    { inlineData: { mimeType: "image/jpeg", data: base64Data } }
+                    { inlineData: { mimeType: "image/jpeg", data: image.split(",")[1] } }
                 ]
             }]
         });
@@ -48,8 +43,8 @@ app.post('/analizar-imagen', async (req, res) => {
         res.json({ texto: response.text() });
 
     } catch (error) {
-        console.error("❌ ERROR REAL EN SERVIDOR ADAX:", error.message);
-        res.status(500).json({ texto: "Error en servidor: " + error.message });
+        console.error("❌ ERROR IA:", error.message);
+        res.status(500).json({ texto: "Error en el análisis: " + error.message });
     }
 });
 
@@ -59,5 +54,5 @@ app.get('*', (req, res) => {
 
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 DIAGNOSTICO ADAX Corriendo en puerto ${PORT}`);
+    console.log(`🚀 ADAX Live en puerto ${PORT}`);
 });
