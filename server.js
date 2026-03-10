@@ -7,59 +7,37 @@ const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
-// 1. Archivos estáticos desde 'public'
 app.use(express.static(path.join(__dirname, 'public')));
 
-// 2. Configuración de IA (Asegúrate de tener GEMINI_API_KEY en Render)
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 app.post('/analizar-imagen', async (req, res) => {
     try {
         const { image, region, estudio } = req.body;
         
-        // Usamos la potencia de la 2.0
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        // USAMOS 1.5 FLASH: Es más estable para cuentas gratuitas
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        const prompt = `Actúa como radiólogo experto de DIAGNOSTICO ADAX. 
-        Analiza esta imagen de ${estudio} - ${region}. 
-        Genera un informe con HALLAZGOS detallados e IMPRESIÓN DIAGNÓSTICA profesional en español.`;
+        const prompt = `Actúa como radiólogo de DIAGNOSTICO ADAX. Analiza esta imagen de ${estudio} - ${region}. Genera HALLAZGOS e IMPRESIÓN DIAGNÓSTICA.`;
 
-        const base64Data = image.split(",")[1];
-
-        // --- TU AJUSTE MAESTRO APLICADO AQUÍ ---
         const result = await model.generateContent({
-            contents: [
-                {
-                    role: "user",
-                    parts: [
-                        { text: prompt },
-                        {
-                            inlineData: {
-                                mimeType: "image/jpeg",
-                                data: base64Data
-                            }
-                        }
-                    ]
-                }
-            ]
+            contents: [{
+                role: "user",
+                parts: [
+                    { text: prompt },
+                    { inlineData: { mimeType: "image/jpeg", data: image.split(",")[1] } }
+                ]
+            }]
         });
 
-        const response = await result.response;
-        res.json({ texto: response.text() });
-
+        res.json({ texto: result.response.text() });
     } catch (error) {
-        console.error("ERROR EN SERVIDOR ADAX:", error.message);
-        res.status(500).json({ texto: "Error técnico: " + error.message });
+        console.error("ERROR ADAX:", error.message);
+        res.status(500).json({ texto: "Error de Cuota/Servidor: " + error.message });
     }
 });
 
-// 3. Ruta principal para Render
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+app.get('*', (req, res) => { res.sendFile(path.join(__dirname, 'public', 'index.html')); });
 
-// 4. Puerto dinámico
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 DIAGNOSTICO ADAX con Gemini 2.0 activo en puerto ${PORT}`);
-});
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 ADAX activo en ${PORT}`));
